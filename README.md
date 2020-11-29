@@ -4,10 +4,12 @@ Quickly bootstrap a Silver Peak Virtual Edge Connect in EVE-NG assigning a desir
 # Requirements
 - Python3:  all script files reference #!/usr/bin/python3, modify if necessary 
 - Public Python packages used: python-dotenv, colored, requests, os, getpass, time, urllib3, ipaddress
-- Additional local modules:
+- Additional local modules called by silverpeak-eve-ec-bootstrap.py:
     - ecosHelp.py -- Basic API calls to Silver Peak Edge Connect OS
-    - silverpeak_ec_assign_orch.py -- Function for assigning an Orchestrator and Account to an Edge Connect (can be run on it's own)
-    - silverpeak_ec_automap.py -- Function for assigning available MAC addresses to interfaces based on incrementing MAC's (can be run on it's own)
+    - silverpeak_ec_assign_orch.py -- Function for assigning an Orchestrator and Account to an Edge Connect
+        - can be run on it's own
+    - silverpeak_ec_automap.py -- Function for assigning available MAC addresses to interfaces based on incrementing MAC's
+        - can be run on it's own
 
 
 # Quick Start
