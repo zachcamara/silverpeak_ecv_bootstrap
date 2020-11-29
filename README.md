@@ -22,6 +22,7 @@ export ACCOUNT_KEY="<ORCH-ACCOUNT-KEY>"
 ```
 Also modeled in dotenv.txt and can be set in a .env file
 
+
 2. Add Silver Peak Edge Connect nodes to your EVE-NG lab
 - Change number of interfaces as desired (default is 4, auto-map supports up to 9)
 - Change console to 'vnc' (default is 'telnet')
@@ -29,10 +30,11 @@ Also modeled in dotenv.txt and can be set in a .env file
 - Open the console to each Edge Connect to obtain it's IP address
 
 
-# Run Variations
-Syntax:
+# Syntax
 
 Run the script and then enter each Edge Connect mgmt0 IP address to be bootstrapped. When entry is complete mark 'n' and then confirm 'y' to proceed with the confirmed IP's.
+
+Example:
 
 ```
 > python3 silverpeak_eve_ec_boostrap.py
