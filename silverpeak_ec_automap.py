@@ -2,6 +2,7 @@ import colored
 from colored import stylize
 import getpass
 import time
+from tqdm import tqdm
 
 # Helper for API interaction with Silver Peak Edge Connect
 from ecosHelp import ecosHelper
@@ -65,24 +66,25 @@ def ec_auto_map(ec_ip, ec_user="admin", ec_pass="admin"):
     try:
         ec.modify_network_interfaces(ifInfo)
         # Per API documentation, waiting 30 seconds before another API call after performing a POST to /networkInterfaces
-        print(stylize("########## WAITING FOR NEXT API CALL ##########",orange_text))
+        print(stylize("\n########## WAITING FOR NEXT API CALL ##########",orange_text))
+        
         i = 0
-        while i < 5:
-            time.sleep(5)
-            print (stylize("#" * i, orange_text))
+        for i in tqdm(range(10)):
+            time.sleep(3)
             i = i + 1
+
     except:
         print("Unable to assign MAC addresses!")
 
     # Save changes on Edge Connect
-    print(stylize("########## SAVING CHANGES ##########",orange_text))
+    print(stylize("\n########## SAVING CHANGES ##########",orange_text))
     ec.save_changes()
 
     # Reboot Edge Connect if required
-    print(stylize("########## CHECKING FOR REBOOT STATUS ##########",orange_text))
+    print(stylize("\n########## CHECKING FOR REBOOT STATUS ##########",orange_text))
     reboot_required = ec.is_reboot_required().json()
     if reboot_required['isRebootRequired'] == True:
-        print(stylize("########## CONFIG COMPLETED - REBOOTING APPLIANCE ##########",orange_text))
+        print(stylize("\n########## CONFIG COMPLETED - REBOOTING APPLIANCE ##########",green_text))
         ec.request_reboot(applyBeforeReboot={"hostname":"eve-silverpeak"})
     else:
         print("No reboot required")
@@ -107,7 +109,7 @@ if __name__ == "__main__":
 
     # Auto-map interfaces to MAC addresses on Edge Connect
     if ec_default_creds == 'y':
-        eve_ec_auto_map(ec_ip)
+        ec_auto_map(ec_ip)
     else:
-        eve_ec_auto_map(ec_ip, ec_user, ec_pass)
+        ec_auto_map(ec_ip, ec_user, ec_pass)
 

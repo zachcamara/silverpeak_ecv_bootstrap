@@ -2,3 +2,4 @@ python-dotenv
 requests
 colored
 urllib3
+tqdm

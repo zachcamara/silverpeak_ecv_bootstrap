@@ -26,13 +26,22 @@ Also modeled in dotenv.txt and can be set in a .env file
 2. Add Silver Peak Edge Connect nodes to your EVE-NG lab
 - Change number of interfaces as desired (default is 4, auto-map supports up to 9)
 - Change console to 'vnc' (default is 'telnet')
-- Connect the first interface on each Edge Connect (e0) to be able to reach Orchestrator outside of EVE-NG (e.g. Management(Cloud0))
+- Connect the first interface on each Edge Connect (e0) to be able to reach Orchestrator
+    - Usually via Network object Management(Cloud0)
+
+3. Start the Edge Connects
 - Open the console to each Edge Connect to obtain it's IP address
+- Wait for the Edge Connects to power up and for the HTTP service to become responsive
 
 
 # Syntax
 
-Run the script and then enter each Edge Connect mgmt0 IP address to be bootstrapped. The script will check that the IP entered is a valid IP address and that it can currently ping the address.
+Run the script and then enter each Edge Connect mgmt0 IP address to be bootstrapped.
+
+The script will check the following readiness indicators to allow an IP to be added:
+- The IP entered is a valid IP address
+- The IP can be reached by ping
+- Performing a GET request returns a valid expected string URI from the Edge Connect
 
 When entry is complete mark 'n' and then confirm 'y' to proceed with the confirmed IP's.
 
@@ -40,17 +49,18 @@ Example:
 
 ```
 > python3 silverpeak_eve_ec_boostrap.py
-> Please enter IP of Edge Connect (e.g. 10.1.30.100): 10.1.30.67
-PING 10.1.30.67 (10.1.30.67): 56 data bytes
+> Please enter IP of Edge Connect (e.g. 10.1.30.100): 10.1.30.72
+PING 10.1.30.72 (10.1.30.72): 56 data bytes
 
---- 10.1.30.67 ping statistics ---
+--- 10.1.30.72 ping statistics ---
 1 packets transmitted, 1 packets received, 0.0% packet loss, 1 packets out of wait time
-round-trip min/avg/max/stddev = 3.389/3.389/3.389/0.000 ms
-> 10.1.30.67: Edge Connect has been added to list for bootstrap
+round-trip min/avg/max/stddev = 2.488/2.488/2.488/0.000 ms
+Edge Connect Unique ID: T3dpXc3_psB9YZj2tVIsFg
+> Please enter tag for Edge Connect (e.g. SITE-1, can be left blank): SITE-3
+> 10.1.30.72: Edge Connect has been added to list for bootstrap
 > Do you want to enter more Edge Connects? (y/n): n
 > These are the Edge Connects that will be bootstrapped:
-> 10.1.30.15
-> 10.1.30.69
+> 10.1.30.72
 > Proceed? (y/n): y
 ```
 
