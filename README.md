@@ -32,15 +32,21 @@ Also modeled in dotenv.txt and can be set in a .env file
 
 # Syntax
 
-Run the script and then enter each Edge Connect mgmt0 IP address to be bootstrapped. When entry is complete mark 'n' and then confirm 'y' to proceed with the confirmed IP's.
+Run the script and then enter each Edge Connect mgmt0 IP address to be bootstrapped. The script will check that the IP entered is a valid IP address and that it can currently ping the address.
+
+When entry is complete mark 'n' and then confirm 'y' to proceed with the confirmed IP's.
 
 Example:
 
 ```
 > python3 silverpeak_eve_ec_boostrap.py
-> Please enter IP of Edge Connect (e.g. 10.1.30.100): 10.1.30.15
-> Do you want to enter more Edge Connects? (y/n): y
-> Please enter IP of Edge Connect (e.g. 10.1.30.100): 10.1.30.69
+> Please enter IP of Edge Connect (e.g. 10.1.30.100): 10.1.30.67
+PING 10.1.30.67 (10.1.30.67): 56 data bytes
+
+--- 10.1.30.67 ping statistics ---
+1 packets transmitted, 1 packets received, 0.0% packet loss, 1 packets out of wait time
+round-trip min/avg/max/stddev = 3.389/3.389/3.389/0.000 ms
+> 10.1.30.67: Edge Connect has been added to list for bootstrap
 > Do you want to enter more Edge Connects? (y/n): n
 > These are the Edge Connects that will be bootstrapped:
 > 10.1.30.15
@@ -48,9 +54,6 @@ Example:
 > Proceed? (y/n): y
 ```
 
-
-
-Note: SOON TO BE ADDED - IP validation that entered data are valid IP's and are reachable before including them in the bootstrap process.
 
 # Behavior
 Script prompts for confirmation under certain scenarios
