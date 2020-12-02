@@ -16,8 +16,8 @@ blue_text = colored.fg("steel_blue_1b") + colored.attr("bold")
 orange_text = colored.fg("dark_orange") + colored.attr("bold")
 
 
-def ec_assign_orch(ec_ip, orchestrator, account, accountKey, ec_user="admin", ec_pass="admin"):
-
+def ec_assign_orch(ec_ip, orchestrator, account, accountKey, ec_user="admin", ec_pass="admin", tag="",orch_check="n"):
+    print(tag)
     ec = ecosHelper(ec_ip, ec_user, ec_pass)
 
     ec.login()
@@ -28,7 +28,7 @@ def ec_assign_orch(ec_ip, orchestrator, account, accountKey, ec_user="admin", ec
         current_orchestrator = ec.get_orchestrator().json()
         print("Current Orchestrator: "+ stylize(current_orchestrator,blue_text))
     except:
-        print("Could not retrieve current Orchestrator for {0} due to {1}".format(ec_ip),Exception)
+        print("Could not retrieve current Orchestrator for {0} due to {1}".format(ec_ip,Exception))
     try:
         current_reg_status = ec.register_spPortal_status().json()
         print("Current Account: " + stylize(current_reg_status['account'],blue_text))
@@ -46,7 +46,10 @@ def ec_assign_orch(ec_ip, orchestrator, account, accountKey, ec_user="admin", ec
     except:
         print("Could not assign new Orchestrator {0} to Edge Connect {1}".format(orchestrator,ec_ip))
     try:
-        ec.register_spPortal(accountKey, account)
+        if tag == "":
+            ec.register_spPortal(accountKey, account)
+        else:
+            ec.register_spPortal(accountKey, account, site=tag)
     except:
         print("Could not assign new account {0} to Edge Connect {1}".format(account,ec_ip))
     
@@ -57,26 +60,29 @@ def ec_assign_orch(ec_ip, orchestrator, account, accountKey, ec_user="admin", ec
 
     time.sleep(7)
 
-    # Wait for up to 40 seconds for appliance reach new Orchestrator, checking every 10 seconds
-    print(stylize("########## WAITING FOR REGISTRATION ##########",orange_text))
 
-    reachable = 'unknown'
-    i = 0
+    if orch_check == 'y':
+        # Wait for up to 40 seconds for appliance reach new Orchestrator, checking every 10 seconds
+        print(stylize("########## WAITING FOR REGISTRATION ##########",orange_text))
 
-    while True:
-        i = i + 1
-        if (reachable != 'Reachable') and (i < 4):
-            try:
-                reachable = ec.get_orchestrator().json()[orchestrator]['webSocket']
-                if reachable != 'Reachable':
-                    print("ECV to Orchestrator web socket status: {0}, waiting 10s for next attempt".format(reachable))
-                    time.sleep(10)
-            except:
-                print("Could not get status from Edge Connect {0} (attempt: {1})".format(ec_ip,i))
-        else:
-            print("Could not reach Orchestrator after 4 attempts, moving on...")
-            break
+        reachable = 'unknown'
+        i = 0
 
+        while True:
+            i = i + 1
+            if (reachable != 'Reachable') and (i < 4):
+                try:
+                    reachable = ec.get_orchestrator().json()[orchestrator]['webSocket']
+                    if reachable != 'Reachable':
+                        print("ECV to Orchestrator web socket status: {0}, waiting 10s for next attempt".format(reachable))
+                        time.sleep(10)
+                except:
+                    print("Could not get status from Edge Connect {0} (attempt: {1})".format(ec_ip,i))
+            else:
+                print("Not registered with Orchestrator after 4 attempts, moving on...")
+                break
+    else:
+        pass
     
     try:
         # Retrieve new status before logging out
@@ -119,6 +125,6 @@ if __name__ == "__main__":
 
     # Login to Edge Connect
     if ec_default_creds == 'y':
-        ec_assign_orch(ec_ip, orchestrator, account, accountKey, )
+        ec_assign_orch(ec_ip, orchestrator, account, accountKey)
     else:
         ec_assign_orch(ec_ip, orchestrator, account, accountKey, ec_user, ec_pass)
