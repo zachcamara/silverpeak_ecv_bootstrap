@@ -66,7 +66,7 @@ def ec_auto_map(ec_ip, ec_user="admin", ec_pass="admin"):
     try:
         ec.modify_network_interfaces(ifInfo)
         # Per API documentation, waiting 30 seconds before another API call after performing a POST to /networkInterfaces
-        print(stylize("\n########## WAITING FOR NEXT API CALL ##########",orange_text))
+        print(stylize("\n########## INTERFACES MAPPED - PAUSING FOR NEXT API CALL ##########",orange_text))
         
         i = 0
         for i in tqdm(range(10)):
