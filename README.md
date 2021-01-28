@@ -66,6 +66,19 @@ Edge Connect Unique ID: T3dpXc3_psB9YZj2tVIsFg
 
 
 # Behavior
+
+The interfaces will map available mac addresses in ascending order to the following logical interfaces:
+
+1. mgmt0
+2. wan0
+3. lan0
+4. wan1
+5. lan1
+6. wan2
+7. lan2
+8. wan3
+9. lan3
+
 Script prompts for confirmation under certain scenarios
 
 # Validated Silver Peak Code Versions
