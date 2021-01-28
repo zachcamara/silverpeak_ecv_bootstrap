@@ -3,3 +3,4 @@ requests
 colored
 urllib3
 tqdm
+vmwc

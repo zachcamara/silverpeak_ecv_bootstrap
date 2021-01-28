@@ -1,12 +1,14 @@
 import getpass
+import os
 import time
 
 import colored
 from colored import stylize
-
-# Helper for API interaction with Silver Peak Edge Connect
+from dotenv import load_dotenv
 from silverpeak_python_sdk import EdgeConnect
 from tqdm import tqdm
+
+from esxi_connector import EsxiHelper
 
 # Console text highlight color parameters
 red_text = colored.fg("red") + colored.attr("bold")
@@ -15,11 +17,7 @@ blue_text = colored.fg("steel_blue_1b") + colored.attr("bold")
 orange_text = colored.fg("dark_orange") + colored.attr("bold")
 
 
-def ec_auto_map(ec_ip, ec_user="admin", ec_pass="admin"):
-
-    ec = EdgeConnect(ec_ip)
-
-    ec.login(ec_user, ec_pass)
+def ec_increment_available_mac(ec):
 
     # Get appliance interfaces, which includes available unnassigned MAC addresses
     interfaces = ec.get_appliance_interfaces()
@@ -78,6 +76,74 @@ def ec_auto_map(ec_ip, ec_user="admin", ec_pass="admin"):
         for interface in ifInfo:
             print(stylize(interface["ifname"] + ":  " + interface["mac"], blue_text))
 
+    return ifInfo
+
+
+def ec_assign_esxi_adapter_mac(vm_name: str):
+
+    # Load environment variables
+    load_dotenv()
+
+    # Set ESXi connection details from .env
+    esxi = EsxiHelper(str(os.getenv("ESXI_SERVER")))
+    esxi.user = os.getenv("ESXI_USER")
+    esxi.password = os.getenv("ESXI_PASSWORD")
+
+    # Get Network Adapter information from VM
+    vm_interfaces = esxi.get_network_int(vm_name_string=vm_name)
+
+    # Interfaces are returned in following nested dictionary format:
+    # {"Network adapter 1" : {"port_group" : "PORTGROUP NAME", "mac" : "MAC ADDRESS"}}
+
+    ifInfo = []
+    if vm_interfaces.get("Network adapter 1") is not None:
+        ifInfo.append(
+            {"ifname": "mgmt0", "mac": vm_interfaces["Network adapter 1"]["mac"]}
+        )
+    if vm_interfaces.get("Network adapter 2") is not None:
+        ifInfo.append(
+            {"ifname": "wan0", "mac": vm_interfaces["Network adapter 2"]["mac"]}
+        )
+    if vm_interfaces.get("Network adapter 3") is not None:
+        ifInfo.append(
+            {"ifname": "lan0", "mac": vm_interfaces["Network adapter 3"]["mac"]}
+        )
+    if vm_interfaces.get("Network adapter 4") is not None:
+        ifInfo.append(
+            {"ifname": "wan1", "mac": vm_interfaces["Network adapter 4"]["mac"]}
+        )
+    if vm_interfaces.get("Network adapter 5") is not None:
+        ifInfo.append(
+            {"ifname": "lan1", "mac": vm_interfaces["Network adapter 5"]["mac"]}
+        )
+    if vm_interfaces.get("Network adapter 6") is not None:
+        ifInfo.append(
+            {"ifname": "wan2", "mac": vm_interfaces["Network adapter 6"]["mac"]}
+        )
+    if vm_interfaces.get("Network adapter 7") is not None:
+        ifInfo.append(
+            {"ifname": "lan2", "mac": vm_interfaces["Network adapter 7"]["mac"]}
+        )
+    if vm_interfaces.get("Network adapter 8") is not None:
+        ifInfo.append(
+            {"ifname": "wan3", "mac": vm_interfaces["Network adapter 8"]["mac"]}
+        )
+    if vm_interfaces.get("Network adapter 9") is not None:
+        ifInfo.append(
+            {"ifname": "lan3", "mac": vm_interfaces["Network adapter 9"]["mac"]}
+        )
+
+    if not ifInfo:
+        print("There were no available MAC addressess to map to interfaces")
+    else:
+        print("The following interface assignments are going to be made:")
+        for interface in ifInfo:
+            print(stylize(interface["ifname"] + ":  " + interface["mac"], blue_text))
+
+    return ifInfo
+
+
+def ec_assign_interfaces(ec, ifInfo: list):
     try:
         ec.modify_network_interfaces(ifInfo)
         # Per API documentation, waiting 30 seconds before another API call after performing a POST to /networkInterfaces
@@ -113,29 +179,56 @@ def ec_auto_map(ec_ip, ec_user="admin", ec_pass="admin"):
         ec.request_reboot(applyBeforeReboot={"hostname": "eve-silverpeak"})
     else:
         print("No reboot required")
-        ec.logout()
+
+
+def ec_interface_map(ec_ip: str, vm_name: str = None):
+
+    ec = EdgeConnect(ec_ip)
+    ec.login(user="admin", password="admin")
+
+    # Auto-map interfaces to MAC addresses on Edge Connect
+    if vm_name is None:
+        ifInfo = ec_increment_available_mac(ec)
+        ec_assign_interfaces(ec, ifInfo)
+    else:
+        ifInfo = ec_assign_esxi_adapter_mac(vm_name)
+        ec_assign_interfaces(ec, ifInfo)
+
+    ec.logout()
 
 
 if __name__ == "__main__":
 
-    # Set custom Edge Connect Credentials, otherwise defaults to admin/admin
-    ec_default_creds = input(
-        "Are default credentials in use for the Edge Connect(s)? (y/n): "
-    )
-    if ec_default_creds == "n":
-        print(stylize("Enter Edge Connect Credentials:", blue_text))
-        ec_user = getpass.getuser()
-        ec_pass = getpass.getpass()
-    else:
-        pass
+    # Assume default credentials configured on Edge Connect (admin/admin)
 
     # Enter IP address of single Edge Connect
     ec_ip = input(
         "Please enter IP address of Edge Connect to Migrate (e.g. 10.1.30.100): "
     )
 
+    method = input(
+        """"Please choose method of MAC address assignments:
+
+        1. Assign interfaces based on ascending order of MAC addresses
+        2. Assign interfaces based on ascending order of Network Adapters in ESXi
+        
+        """
+    )
+
+    ec = EdgeConnect(ec_ip)
+    ec.login(user="admin", password="admin")
+
     # Auto-map interfaces to MAC addresses on Edge Connect
-    if ec_default_creds == "y":
-        ec_auto_map(ec_ip)
+    if method == "1":
+        ifInfo = ec_increment_available_mac(ec)
+        ec_assign_interfaces(ec, ifInfo)
+    elif method == "2":
+        vm_name = input("Please enter VM name of ECV: ")
+        ifInfo = ec_assign_esxi_adapter_mac(vm_name)
+        ec.logout()
+        exit()
+        ec_assign_interfaces(ec, ifInfo)
     else:
-        ec_auto_map(ec_ip, ec_user, ec_pass)
+        print("No valid method chosen")
+
+    ec.logout()

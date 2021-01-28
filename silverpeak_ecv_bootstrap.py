@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from silverpeak_python_sdk import EdgeConnect
 
 from silverpeak_ec_assign_orch import ec_assign_orch
-from silverpeak_ec_automap import ec_auto_map
+from silverpeak_ec_automap import ec_interface_map
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -27,8 +27,8 @@ def valid_and_reachable(ec_ip):
         if ping_check == 0:
             try:
                 ec = EdgeConnect(ec_ip)
-                http_check = ec.ec_api_id
-                print("Edge Connect Unique ID: {0}".format(http_check))
+                ec.login(user="admin", password="admin")
+                ec.logout()
                 return True
             except:
                 print(
@@ -39,6 +39,7 @@ def valid_and_reachable(ec_ip):
                         red_text,
                     )
                 )
+
                 return False
 
         else:
@@ -73,7 +74,20 @@ orchestrator = str(os.getenv("ORCH_URL"))
 account = os.getenv("ACCOUNT")
 accountKey = os.getenv("ACCOUNT_KEY")
 
+
 ec_ip_list = []
+
+method = input(
+    stylize(
+        """Please choose method of MAC address assignments for the Edge Connect(s):
+
+    1. Assign interfaces based on ascending order of MAC addresses
+    2. Assign interfaces based on ascending order of Network Adapters in ESXi
+    
+    """,
+        blue_text,
+    )
+)
 
 # Enter IP address of single Edge Connect
 enter_more_ec = "y"
@@ -90,6 +104,13 @@ while enter_more_ec == "y":
                     blue_text,
                 )
             )
+            if method == "2":
+                vm_name = input(
+                    stylize(
+                        "Please enter VM name for Edge Connect (e.g. ECV-01): ",
+                        blue_text,
+                    )
+                )
             print(
                 stylize(
                     "{0}: Edge Connect has been added to list for bootstrap".format(
@@ -98,7 +119,10 @@ while enter_more_ec == "y":
                     green_text,
                 )
             )
-            ec_ip_list.append({"ec_ip": ec_ip, "tag": tag})
+            if method == "2":
+                ec_ip_list.append({"ec_ip": ec_ip, "tag": tag, "vm_name": vm_name})
+            else:
+                ec_ip_list.append({"ec_ip": ec_ip, "tag": tag})
         else:
             pass
     else:
@@ -125,51 +149,58 @@ if not ec_ip_list:
 else:
 
     print(stylize("These are the Edge Connects that will be bootstrapped:", blue_text))
-    for ec in ec_ip_list:
-        print(ec["ec_ip"], " { TAG:", ec["tag"], "}")
-
-    proceed = input(stylize("Proceed? (y/n): ", blue_text))
-    if proceed == "y":
-        # Assign Orchestrator and Account License to Edge Connect
+    if method == "2":
         for ec in ec_ip_list:
-            try:
-                print(
-                    stylize(
-                        "\n\nAssigning Orchestrator to {0}".format(ec["ec_ip"]),
-                        green_text,
-                    )
-                )
-                ec_assign_orch(
-                    ec["ec_ip"], orchestrator, account, accountKey, tag=ec["tag"]
-                )
-            except:
-                print(
-                    stylize(
-                        "\n\nFailed to assign Orchestrator to Edge Connect at {0}".format(
-                            ec["ec_ip"]
-                        ),
-                        red_text,
-                    )
-                )
-
-        # Map interfaces to MAC addresses, this will incur a reboot of the Edge Connect
-        for ec in ec_ip_list:
-            try:
-                print(
-                    stylize(
-                        "\n\nMapping Interfaces on {0}".format(ec["ec_ip"]), green_text
-                    )
-                )
-                ec_auto_map(ec["ec_ip"])
-            except:
-                print(
-                    stylize(
-                        "\n\nFailed to auto-map Edge Connect at {0}".format(
-                            ec["ec_ip"]
-                        ),
-                        red_text,
-                    )
-                )
-
+            print(
+                ec["ec_ip"], " -- { TAG:", ec["tag"], "} -- ", "VM Name:", ec["vm_name"]
+            )
     else:
-        exit()
+        for ec in ec_ip_list:
+            print(ec["ec_ip"], " -- { TAG:", ec["tag"], "}")
+
+
+proceed = input(stylize("Proceed? (y/n): ", blue_text))
+if proceed == "y":
+    # Assign Orchestrator and Account License to Edge Connect
+    for ec in ec_ip_list:
+        try:
+            print(
+                stylize(
+                    "\n\nAssigning Orchestrator to {0}".format(ec["ec_ip"]),
+                    green_text,
+                )
+            )
+            ec_assign_orch(
+                ec["ec_ip"], orchestrator, account, accountKey, tag=ec["tag"]
+            )
+        except:
+            print(
+                stylize(
+                    "\n\nFailed to assign Orchestrator to Edge Connect at {0}".format(
+                        ec["ec_ip"]
+                    ),
+                    red_text,
+                )
+            )
+
+    # Map interfaces to MAC addresses, this will incur a reboot of the Edge Connect
+
+    for ec in ec_ip_list:
+        try:
+            print(
+                stylize("\n\nMapping Interfaces on {0}".format(ec["ec_ip"]), green_text)
+            )
+            if method == "2":
+                ec_interface_map(ec["ec_ip"], vm_name=ec["vm_name"])
+            else:
+                ec_interface_map(ec["ec_ip"])
+        except:
+            print(
+                stylize(
+                    "\n\nFailed to auto-map Edge Connect at {0}".format(ec["ec_ip"]),
+                    red_text,
+                )
+            )
+
+else:
+    exit()

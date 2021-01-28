@@ -1,3 +1,0 @@
-ORCH_IP_ADDRESS="Orchestrator_IP_Address_or_FQDN"
-ACCOUNT="Silver_Peak_Account"
-ACCOUNT_KEY="Silver_Peak_Account_Key"
