@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
     # Enter IP address of single Edge Connect
     ec_ip = input(
-        "Please enter IP address of Edge Connect to Migrate (e.g. 10.1.30.100): "
+        "Please enter IP address of Edge Connect to map interfaces (e.g. 10.1.30.100): "
     )
 
     method = input(
@@ -225,8 +225,6 @@ if __name__ == "__main__":
     elif method == "2":
         vm_name = input("Please enter VM name of ECV: ")
         ifInfo = ec_assign_esxi_adapter_mac(vm_name)
-        ec.logout()
-        exit()
         ec_assign_interfaces(ec, ifInfo)
     else:
         print("No valid method chosen")

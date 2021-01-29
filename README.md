@@ -51,7 +51,7 @@ export ACCOUNT="<ORCH-ACCOUNT-NAME>"
 export ACCOUNT_KEY="<ORCH-ACCOUNT-KEY>" 
 ```
 
-These are also modeled in dotenv.txt and can be set in a .env file
+These can also be set in a .env file
 
 To assign via Network Adapter in ESXi you must also include environment variables for the ESXi host to connect to.
 
