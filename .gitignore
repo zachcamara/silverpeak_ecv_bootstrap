@@ -9,5 +9,8 @@ __pycache__/
 # dotenv
 *.env
 
+# Logging
+logging/
+
 # Virtual Environment
 .venv/
